@@ -1,3 +1,4 @@
+import re
 opcode_dict=dict()
 symbol_table=dict()     #format [name,type_variable/label,location_counter_address]    not finalised
 
@@ -31,16 +32,13 @@ class Pass_One:
         return str.startswith("//")
     
     def has_a_label(self,str):
-        a=str.find(':')
+        a=str[0].find(':')
         if a!=-1:
             return True
         return False
     
     def extract_label(self,str):
-        a=str.find(':')
-        a=str[:a]
-        a=a.strip()
-        return a
+        return str[0]
 
     def valid_opcode(self,str):
         a=opcode_dict.get(str,-2)
@@ -49,26 +47,10 @@ class Pass_One:
         return True
 
     def extract_opcode(self,str):
-        k=str.find(':')
-        if(k!=-1):
-            str=str[k+1:]
-        str=str.strip()
-        lis=str.split(' ')
-        for i in lis:
-            if i!=''and (not i.startswith('//')):
-                return i
-        return lis[1]
+        return str[0]
  
-    def extract_variable(self,str):
-        k=str.find(':')
-        if(k!=-1):
-            str=str[k+1:]
-        str=str.strip()
-        lis=str.split(' ')                       #use regex for handling more spaces or modify it :/
-        for i in lis:
-            if i!='' and (not i.startswith('//')):
-                return i 
-        return lis[1]
+    def extract_variable(self,str): 
+        return str[1]
 
     def is_assembler_directive(self,str):
         pass
@@ -107,32 +89,42 @@ class Pass_One:
             line=line.strip()
             operand=''
             opcode=''
+            label=''
             length=0                               #maybe required not sure
-
             if self.is_end_statement(line):
                 break
-            if self.is_a_comment(line): #checks for comment
-                continue
             if line=='\n':
                 continue
+            if self.is_a_comment(line):             #checks for comment
+                continue
+            comm=line.find('//')
+            if comm!=-1:
+                line=line[:comm]
+            line=line.strip()
+            line=re.findall('\S+',line)
+
+            if(len(line)>3):                       #error for more operands
+                pass
+            
+            file_temp.write(' '.join(line))                 #write to the temporary file
+            file_temp.write('\n')
 
             if self.is_declarative_statement(line):       #make function for handling declarations here
                 continue
                 
             
             if self.has_a_label(line):
-                label=self.extract_label(line)  #send it to symbol table later and check if it already exists for error reporting   
-
+                label=self.extract_label(line)  #send it to symbol table later and check if it already exists for error reporting 
+                line=line[1:]  
+            
             opcode=self.extract_opcode(line)
             if self.valid_opcode(opcode):   #requires case for invalid for now
                 a=opcode_dict.get(opcode)
                 if a[1]==1:                        #nothing done for literal yet
                     operand=self.extract_variable(line)
-
             else:                                       #write code for error reporting for invalid opcode
                 pass
-
-            file_temp.write(opcode+' '+operand+'\n')
+            
             line_number+=1
             self.location_counter+=1
             
