@@ -93,8 +93,7 @@ class Pass_One:
             length=0                               #maybe required not sure
             if self.is_end_statement(line):
                 break
-            if line=='\n':
-                continue
+                
             if self.is_a_comment(line):             #checks for comment
                 continue
             comm=line.find('//')
@@ -102,6 +101,9 @@ class Pass_One:
                 line=line[:comm]
             line=line.strip()
             line=re.findall('\S+',line)
+            
+            if(len(line)==0):                                    #for empty lines :/
+                continue
 
             if(len(line)>3):                       #error for more operands
                 pass
