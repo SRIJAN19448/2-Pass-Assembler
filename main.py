@@ -39,7 +39,7 @@ class Pass_One:
     def extract_label(self,str):
         a=str.find(':')
         a=str[:a]
-        a.strip()
+        a=a.strip()
         return a
 
     def valid_opcode(self,str):
@@ -54,14 +54,20 @@ class Pass_One:
             str=str[k+1:]
         str=str.strip()
         lis=str.split(' ')
-        return lis[0]
-
+        for i in lis:
+            if i!=''and (not i.startswith('//')):
+                return i
+        return lis[1]
+ 
     def extract_variable(self,str):
         k=str.find(':')
         if(k!=-1):
             str=str[k+1:]
         str=str.strip()
         lis=str.split(' ')                       #use regex for handling more spaces or modify it :/
+        for i in lis:
+            if i!='' and (not i.startswith('//')):
+                return i 
         return lis[1]
 
     def is_assembler_directive(self,str):
@@ -107,19 +113,24 @@ class Pass_One:
                 break
             if self.is_a_comment(line): #checks for comment
                 continue
+            if line=='\n':
+                continue
 
             if self.is_declarative_statement(line):       #make function for handling declarations here
                 continue
                 
             
             if self.has_a_label(line):
-                label=self.extract_label(line)  #send it to symbol table later
+                label=self.extract_label(line)  #send it to symbol table later and check if it already exists for error reporting   
 
             opcode=self.extract_opcode(line)
             if self.valid_opcode(opcode):   #requires case for invalid for now
                 a=opcode_dict.get(opcode)
                 if a[1]==1:                        #nothing done for literal yet
                     operand=self.extract_variable(line)
+
+            else:                                       #write code for error reporting for invalid opcode
+                pass
 
             file_temp.write(opcode+' '+operand+'\n')
             line_number+=1
