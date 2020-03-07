@@ -127,7 +127,7 @@ class Pass_One:
             opcode=self.extract_opcode(line)
             if self.valid_opcode(opcode):   #requires case for invalid for now
                 a=opcode_dict.get(opcode)
-                if a[1]==1:                        #nothing done for literal yet
+                if a[1]!=0:                        #nothing done for literal yet
                     operand=self.extract_variable(line)
             else:                                       #write code for error reporting for invalid opcode
                 pass
