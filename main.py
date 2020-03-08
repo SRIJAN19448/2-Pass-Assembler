@@ -28,6 +28,7 @@ class Pass_One:
     error_found=False                                    #used to know if error is found so no second pass required
     fatal_error=False
     stop_found=False
+    used_address=list()
     
     def __init__(self,file):
         self.filename=file
@@ -78,7 +79,11 @@ class Pass_One:
         return False
 
     def is_declarative_statement(self,str):
-        pass
+        if(len(str)!=3):
+            return False
+        if str[1]=='DW':
+            return True
+        return False
 
     def is_a_stop(self,str):                  #used to detect stop
         pass
@@ -129,6 +134,23 @@ class Pass_One:
 
 
             if self.is_declarative_statement(line):       #make function for handling declarations here
+                if self.location_counter>255:
+                    file_error.write("Memory address out of bounds for instruction. \n")
+                    self.fatal_error=True
+                if not self.symbol_already_exists(line[0]):
+                    symbol_table[line[0]]={'type':'variable','used':False,'defined':True,'address':self.location_counter,'value':line[2]}
+                else:
+                    if symbol_table[line[0]]['defined']==True:
+                        file_error.write('Symbol '+line[0]+'declared multiple times \n')
+                        self.fatal_error=True
+                    elif symbol_table[line[0]]['type']=='label':
+                        file_error.write('Label and variable with the same name '+label+'\n')
+                        self.fatal_error=True
+                    else:
+                        symbol_table[line[0]]['defined']=True
+                        symbol_table[line[0]]['address']=self.location_counter
+                        symbol_table[line[0]]['value']=line[2]
+                self.location_counter+=1
                 continue                
             
             if self.has_a_label(line):
@@ -139,13 +161,16 @@ class Pass_One:
                 else:
                     if symbol_table[label]['type']=='variable':
                         file_error.write('Label and variable with the same name '+label+'\n')
+                        symbol_table[label]['defined']=True
                         self.fatal_error=True
                         self.error_found=True
                     elif symbol_table[label]['defined']==True:
                         file_error.write('Label'+label+'declared multiple times')
                         self.fatal_error=True
-                    symbol_table[label]['address']=self.location_counter
-                    symbol_table[label]['defined']=True
+                    else:
+                        symbol_table[label]['address']=self.location_counter
+                        symbol_table[label]['defined']=True
+                self.location_counter+=1
   
             
             opcode=self.extract_opcode(line)
@@ -167,14 +192,22 @@ class Pass_One:
                             symbol_table[operand]['used']=True
                         
                     elif self.has_literal(operand):
-                        #operand=operand[2:-1] 
-                        if not self.literal_already_exists(operand):
-                            literal_table[operand]=(self.location_counter)
-                        else:
-                            pass                                                       #pass report error
+                        literal_table[operand]=(self.location_counter)
+
+                        
                     else:
                         if not self.symbol_already_exists(operand):
                             symbol_table[operand]={'type':'variable','used':True,'defined':False,'address':None,'value':0}
+                            if operand.isnumeric():
+                                if int(operand)>255:
+                                    file_error.write("Implicit address used is out of bounds for memory \n")
+                                    self.fatal_error=True
+                                symbol_table[operand]['defined']=True
+                                symbol_table[operand]['address']=int(operand)
+                                symbol_table[operand]['value']=operand
+                                self.used_address.append(operand)
+                        else:
+                            symbol_table[operand]['used']=True
 
             else:                                       #write code for error reporting for invalid opcode
                 file_error.write(line[0])
@@ -193,6 +226,12 @@ class Pass_One:
                 file_error.write(' is used but not defined \n')
 
                 if symbol_table[i]['type']=='variable':
+                    if self.location_counter in self.used_address:
+                        self.location_counter+=1
+                    if self.location_counter>255:
+                        file_error.write("Memory out of bounds. symbols can't be allocated memory anymore \n")
+                        self.fatal_error=True
+                        break
                     symbol_table[i]['address']=self.location_counter
                     symbol_table[i]['defined']=True
                     self.location_counter+=1
@@ -276,15 +315,19 @@ def pass_one():
 
 opcode_initialise()
 pass_one()
-file_symbol_table=open('symbol_table.txt','w')
+
+file_symbol_table=open('symbol_table.txt','w')                      #writing in the symbol table
 for i in symbol_table.keys():
     file_symbol_table.write('Name:'+i)
     file_symbol_table.write('\t')
     file_symbol_table.write('Type: '+symbol_table[i]['type'])
+    file_symbol_table.write('\t Value: '+str(symbol_table[i]['value']))
+    file_symbol_table.write('\t Address'+str(symbol_table[i]['address']))
     file_symbol_table.write('\n')
+
 file_symbol_table.close()
 
-file_literal_table=open('literal_table.txt','w')
+file_literal_table=open('literal_table.txt','w')                           #writing in the literal table
 for i in literal_table.keys():
     file_literal_table.write('Name '+i+'\t')
     file_literal_table.write('Address ')
