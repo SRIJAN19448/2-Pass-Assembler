@@ -102,6 +102,7 @@ class Pass_One:
 
        
         for line in file_assemble:
+            self.line_number+=1
             line=line.strip()
             operand=''
             opcode=''
@@ -178,12 +179,16 @@ class Pass_One:
                 continue
             if opcode=='STP':
                 self.stop_found=True
-            file_temp.write(' '.join(line))                 #write to the temporary file
-            file_temp.write('\n')
+            
             
             if self.valid_opcode(opcode):   #requires case for invalid for now
                 a=opcode_dict.get(opcode)
                 if a[1]!=0:                        #nothing done for literal yet
+                    if(len(line)!=2):
+                        file_error.write("operand not supplied for given operand at line number "+str(self.line_number)+'\n')
+                        self.fatal_error=True
+                        self.error_found=True
+                        continue
                     operand=self.extract_variable(line)
                     if a[1]==2:
                         if not self.symbol_already_exists(operand):
@@ -217,6 +222,9 @@ class Pass_One:
                 self.error_found=True
                 self.fatal_error=True
             
+            file_temp.write(' '.join(line))                 #write to the temporary file
+            file_temp.write('\n')
+            
             self.location_counter+=1
         
         for i in symbol_table.keys():
@@ -226,7 +234,7 @@ class Pass_One:
                 file_error.write(' is used but not defined \n')
 
                 if symbol_table[i]['type']=='variable':
-                    if self.location_counter in self.used_address:
+                    while self.location_counter in self.used_address:
                         self.location_counter+=1
                     if self.location_counter>255:
                         file_error.write("Memory out of bounds. symbols can't be allocated memory anymore \n")
@@ -292,8 +300,6 @@ class Pass_two:
             file_output=open('output.txt','w')
             file_output.close()
 
-
-
 def pass_one():
     filen=input("Enter the filename ")
     obj=Pass_One(filen)
@@ -306,12 +312,7 @@ def pass_one():
         file_output.close()
         file_error=open('error.txt','a')
         file_error.write('\n fatal error: no output generated \n ')
-        file_error.close()
-    
-    
-        
-
-
+        file_error.close() 
 
 opcode_initialise()
 pass_one()
@@ -334,5 +335,3 @@ for i in literal_table.keys():
     file_literal_table.write(str(literal_table[i]))
     file_literal_table.write('\n')
 file_literal_table.close()
-
-
