@@ -208,6 +208,7 @@ class Pass_two:
 
         for line in file_open:
             line=line.rstrip()
+            temp=False
             line=line.split(' ')
             opcode=line[0]
             type=opcode_dict[opcode][1]
@@ -219,10 +220,24 @@ class Pass_two:
                 except:
                     binary=bin(literal_table[var]).replace("0b",'')
                 l=8-len(binary)
+                if l<0:
+                    file_error=open('error.txt','a')
+                    file_error.write('\n fatal error: no output generated 5')
+                    file_error.close()
+                    temp=True
+                    break
+
+                    
                 binary='0'*l+binary
                 file_output.write(' ')
                 file_output.write(binary)
             file_output.write('\n')
+        file_output.close()
+        if temp:
+            file_output=open('output.txt','w')
+            file_output.close()
+
+
 
 def pass_one():
     filen=input("Enter the filename ")
@@ -242,11 +257,18 @@ opcode_initialise()
 pass_one()
 file_symbol_table=open('symbol_table.txt','w')
 for i in symbol_table.keys():
-    
     file_symbol_table.write('Name:'+i)
     file_symbol_table.write('\t')
     file_symbol_table.write('Type: '+symbol_table[i]['type'])
     file_symbol_table.write('\n')
 file_symbol_table.close()
+
+file_literal_table=open('literal_table.txt','w')
+for i in literal_table.keys():
+    file_literal_table.write('Name '+i+'\t')
+    file_literal_table.write('Address ')
+    file_literal_table.write(str(literal_table[i]))
+    file_literal_table.write('\n')
+file_literal_table.close()
 
 
