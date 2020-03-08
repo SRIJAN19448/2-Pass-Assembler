@@ -222,6 +222,7 @@ class Pass_two:
                 l=8-len(binary)
                 if l<0:
                     file_error=open('error.txt','a')
+                    file_error.write('\n memory out of bounds')
                     file_error.write('\n fatal error: no output generated 5')
                     file_error.close()
                     temp=True
