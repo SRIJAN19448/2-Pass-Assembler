@@ -26,6 +26,7 @@ class Pass_One:
     location_counter=0
     line_number=0           #later use for error handling
     error_found=False                                    #used to know if error is found so no second pass required
+    fatal_error=False
     
     def __init__(self,file):
         self.filename=file
@@ -41,7 +42,7 @@ class Pass_One:
         return False
     
     def extract_label(self,str):
-        return str[0]
+        return str[0][:-1]
 
     def valid_opcode(self,str):
         a=opcode_dict.get(str,-2)
@@ -55,11 +56,21 @@ class Pass_One:
     def extract_variable(self,str): 
         return str[1]
 
-    def is_assembler_directive(self,str):
-        pass
+    def literal_already_exists(self,str):
+        if literal_table.get(str,-2)==-2:
+            return False
+        return True
+    
+    def symbol_already_exists(self,str):
+        if symbol_table.get(str,-2)==-2:
+            return False
+        return True
 
     def has_literal(self,str):
-        pass
+        a=str.find('=')
+        if a==-1:
+            return False
+        return True
 
     def is_end_statement(self,str):
         if str.startswith("END"):
@@ -73,9 +84,6 @@ class Pass_One:
         pass
 
     def is_start(self,str):                         #used to detect start of the assembly program
-        pass
-
-    def check_type_of_instruction(self,str):           #check whether needs a variable or not
         pass
 
     def main(self):
@@ -94,6 +102,7 @@ class Pass_One:
             opcode=''
             label=''
             length=0                               #maybe required not sure
+            stop_found=False
             
             if self.is_end_statement(line):
                 break
@@ -111,15 +120,27 @@ class Pass_One:
                 continue
 
             if(len(line)>3):                       #error for more operands
-                pass
+                file_error.write('More than required operands at line number ')
+                file_error.write(self.location_counter)
+                file_error.write('\n')
+                self.error_found=True
+                self.location_counter+=1
+                continue
+
 
             if self.is_declarative_statement(line):       #make function for handling declarations here
-                continue
-                
+                continue                
             
             if self.has_a_label(line):
                 label=self.extract_label(line)  #send it to symbol table later and check if it already exists for error reporting 
                 line=line[1:]
+                if not self.symbol_already_exists(label):
+                    symbol_table[label]={'type':'label','used':False,'defined':True,'address':self.location_counter,'value':0}
+                else:
+                    if symbol_table[label]['defined']==True:
+                        file_error.write('Label'+label+'declared multiple times')
+                    symbol_table[label]['address']=self.location_counter
+                    symbol_table[label]['defined']=True
 
             file_temp.write(' '.join(line))                 #write to the temporary file
             file_temp.write('\n')  
@@ -129,11 +150,44 @@ class Pass_One:
                 a=opcode_dict.get(opcode)
                 if a[1]!=0:                        #nothing done for literal yet
                     operand=self.extract_variable(line)
+                    if a[1]==2:
+                        if not self.symbol_already_exists(operand):
+                            symbol_table[operand]={'type':'label','used':True,'defined':False,'address':None,'value':0}
+                        else:
+                            symbol_table[operand]['used']=True
+                        
+                    elif self.has_literal(operand):
+                        #operand=operand[2:-1] 
+                        if not self.literal_already_exists(operand):
+                            literal_table[operand]=(self.location_counter)
+                        else:
+                            pass                                                       #pass report error
+                    else:
+                        if not self.symbol_already_exists(operand):
+                            symbol_table[operand]={'type':'variable','used':True,'defined':False,'address':None,'value':0}
+
             else:                                       #write code for error reporting for invalid opcode
-                pass
+                file_error.write(line[0])
+                file_error.write(' is an invalid opcode at line number ')
+                file_error.write(self.location_counter)
+                file_error.write('\n')
+                self.error_found=True
             
-            line_number+=1
             self.location_counter+=1
+        
+        for i in symbol_table.keys():
+            if symbol_table[i]['defined']==False:
+                file_error.write('symbol ')
+                file_error.write(i)
+                file_error.write(' is used but not defined \n')
+
+                if symbol_table[i]['type']=='variable':
+                    symbol_table[i]['address']=self.location_counter
+                    symbol_table[i]['defined']=True
+                    self.location_counter+=1
+                else:
+                    self.fatal_error=True
+                self.error_found=True
             
         file_temp.close()
         file_assemble.close()
@@ -161,23 +215,38 @@ class Pass_two:
             if type!=0:
                 var=line[1]
                 try:
-                    binary=bin(symbol_table[var][0]).replace("0b",'')
+                    binary=bin(symbol_table[var]['address']).replace("0b",'')
                 except:
-                    binary=bin(literal_table[var][0]).replace("0b",'')
+                    binary=bin(literal_table[var]).replace("0b",'')
                 l=8-len(binary)
                 binary='0'*l+binary
                 file_output.write(' ')
                 file_output.write(binary)
             file_output.write('\n')
 
-
-
-
 def pass_one():
     filen=input("Enter the filename ")
     obj=Pass_One(filen)
     obj.main()
+    if obj.fatal_error==False:
+        obj2=Pass_two()
+        obj2.main()
+    else:
+        file_error=open('error.txt','a')
+        file_error.write('\n fatal error: no output generated 5')
+        file_error.close()
+
+
 
 opcode_initialise()
+pass_one()
+file_symbol_table=open('symbol_table.txt','w')
+for i in symbol_table.keys():
+    
+    file_symbol_table.write('Name:'+i)
+    file_symbol_table.write('\t')
+    file_symbol_table.write('Type: '+symbol_table[i]['type'])
+    file_symbol_table.write('\n')
+file_symbol_table.close()
 
 
