@@ -1,0 +1,39 @@
+  ADD K                 //hey trying something
+   //this is a sample comment
+ 
+   LABEL: SUB p
+//Code Starts Here
+
+CLA // CLear Accumulator
+
+INP 158
+
+INP B //B
+
+LAC 255
+
+SUB B
+
+ADD ='5'
+
+BRN L2
+
+DSP A
+
+CLA
+
+
+DSP B
+
+CLA
+
+T: BRZ L2
+
+L2: CLA
+
+STP
+
+B DW 10
+A DW 12
+
+
