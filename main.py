@@ -27,10 +27,10 @@ class Pass_One:
     line_number=0           #later use for error handling
     error_found=False                                    #used to know if error is found so no second pass required
     fatal_error=False
+    stop_found=False
     
     def __init__(self,file):
         self.filename=file
-        pass
     
     def is_a_comment(self,str):
         return str.startswith("//")
@@ -137,15 +137,25 @@ class Pass_One:
                 if not self.symbol_already_exists(label):
                     symbol_table[label]={'type':'label','used':False,'defined':True,'address':self.location_counter,'value':0}
                 else:
-                    if symbol_table[label]['defined']==True:
+                    if symbol_table[label]['type']=='variable':
+                        file_error.write('Label and variable with the same name '+label+'\n')
+                        self.fatal_error=True
+                        self.error_found=True
+                    elif symbol_table[label]['defined']==True:
                         file_error.write('Label'+label+'declared multiple times')
+                        self.fatal_error=True
                     symbol_table[label]['address']=self.location_counter
                     symbol_table[label]['defined']=True
-
-            file_temp.write(' '.join(line))                 #write to the temporary file
-            file_temp.write('\n')  
+  
             
             opcode=self.extract_opcode(line)
+            if opcode=='START':
+                continue
+            if opcode=='STP':
+                self.stop_found=True
+            file_temp.write(' '.join(line))                 #write to the temporary file
+            file_temp.write('\n')
+            
             if self.valid_opcode(opcode):   #requires case for invalid for now
                 a=opcode_dict.get(opcode)
                 if a[1]!=0:                        #nothing done for literal yet
@@ -172,6 +182,7 @@ class Pass_One:
                 file_error.write(self.location_counter)
                 file_error.write('\n')
                 self.error_found=True
+                self.fatal_error=True
             
             self.location_counter+=1
         
@@ -187,7 +198,11 @@ class Pass_One:
                     self.location_counter+=1
                 else:
                     self.fatal_error=True
-                self.error_found=True
+                    self.error_found=True
+        if(self.stop_found==False):
+            file_error.write('Stop not found in the program\n')
+            file_temp.write('STP \n')
+
             
         file_temp.close()
         file_assemble.close()
@@ -248,9 +263,14 @@ def pass_one():
         obj2=Pass_two()
         obj2.main()
     else:
+        file_output=open('output.txt','w')
+        file_output.close()
         file_error=open('error.txt','a')
-        file_error.write('\n fatal error: no output generated 5')
+        file_error.write('\n fatal error: no output generated \n ')
         file_error.close()
+    
+    
+        
 
 
 
