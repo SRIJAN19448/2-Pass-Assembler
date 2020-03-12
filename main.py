@@ -127,7 +127,7 @@ class Pass_One:
 
             if(len(line)>3):                       #error for more operands
                 file_error.write('More than required operands at line number ')
-                file_error.write(self.location_counter)
+                file_error.write(str(self.location_counter))
                 file_error.write('\n')
                 self.error_found=True
                 self.location_counter+=1
@@ -217,7 +217,7 @@ class Pass_One:
             else:                                       #write code for error reporting for invalid opcode
                 file_error.write(line[0])
                 file_error.write(' is an invalid opcode at line number ')
-                file_error.write(self.location_counter)
+                file_error.write(str(self.location_counter))
                 file_error.write('\n')
                 self.error_found=True
                 self.fatal_error=True
