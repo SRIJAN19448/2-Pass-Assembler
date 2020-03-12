@@ -302,6 +302,12 @@ class Pass_two:
 
 def pass_one():
     filen=input("Enter the filename ")
+    try:
+        po=open(filen,'r')
+        po.close()
+    except:
+        print("File do not exist. make sure its in the same directory and restart the programs")
+        return
     obj=Pass_One(filen)
     obj.main()
     if obj.fatal_error==False:
