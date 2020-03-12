@@ -1,0 +1,6 @@
+Name:158	Type: variable	 Value: 158	 Address158
+Name:B	Type: variable	 Value: 0	 Address18
+Name:251	Type: variable	 Value: 251	 Address251
+Name:L2	Type: label	 Value: 0	 Address16
+Name:A	Type: variable	 Value: 0	 Address15
+Name:L1	Type: label	 Value: 0	 Address11
