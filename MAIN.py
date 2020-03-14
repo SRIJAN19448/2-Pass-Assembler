@@ -169,7 +169,7 @@ class Pass_One:
                     else:
                         symbol_table[label]['address'] = self.location_counter
                         symbol_table[label]['defined'] = True
-                self.location_counter += 1
+                
 
             opcode = self.extract_opcode(line)
             if opcode == 'START':
@@ -197,7 +197,8 @@ class Pass_One:
                             symbol_table[operand]['used'] = True
 
                     elif self.has_literal(operand):
-                        literal_table[operand] = (self.location_counter)
+                        literal_table[operand] = (self.location_counter+1)
+                        self.location_counter+=1
 
 
                     else:
