@@ -36,6 +36,9 @@ A function named pass_one is made to invoke pass one of assembler which in turn 
 
 7) The symbol_table, literal_table and errors(if any) are printed and output is generated in output.txt if there exists no fatal error.
 
+Comments are declared by using // sign before comments. Anything after // in a given line is ignored.
+Labels are declared in the format <ADD LABEL NAME>: . if ':' is not used immediately after label(without space), it may cause fatal error!!!
+
 ----------------------------------------------------------------Error - Reporting-----------------------------------------------------
 
 The following are the errors that an assembler can encounter :
@@ -69,6 +72,6 @@ The Possible Errors mentioned above have been handled in the following way in ou
     8. The message "label and variable with the same name" is written in file error.txt. the object code is not generated in this case.
 
 ****************************************Instructions to run**************************************************************
-RUN THE FOLLOWING ON THE TERMINAL IN THE DIRECTORY CONTAINING MAIN.py:
+AFTER EXTRACTING, RUN THE FOLLOWING ON THE TERMINAL IN THE DIRECTORY CONTAINING MAIN.py:
 python MAIN.py
 follow the instruction on the terminal
