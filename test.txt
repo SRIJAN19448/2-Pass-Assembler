@@ -1,0 +1,17 @@
+//Code Starts Here
+CLA // CLear Accumulator
+INP A //A
+INP B //B
+LAC 251
+SUB B
+SUB '=3'
+ADD '=5'
+BRN L2
+DSP A
+CLA
+BRZ L1
+L1: DSP B
+CLA
+BRZ L2
+A DW  0
+L2: STP
